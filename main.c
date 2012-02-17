@@ -59,14 +59,16 @@ static void update_sound(snd_pcm_t* handle, unsigned int position)
     snd_pcm_writei(handle, buffer, sizeof(buffer));
 }
 
-static void clear_terminal()
+static void init_terminal()
 {
+    setvbuf(stdout, NULL, _IONBF, 0);
     printf("\033[1J");
 }
 
 static void goto_xy(int x, int y)
 {
-    printf("\033[%i;%iH", y, x);
+    // terminal-coordinates start from (1, 1), what sucks.
+    printf("\033[%i;%iH", y + 1, x + 1);
 }
 
 static void set_color(int color)
@@ -76,7 +78,7 @@ static void set_color(int color)
 
 static void draw_pixel(int x, int y, int color, int weight)
 {
-    if (x > 0 && y > 0 && x <= terminal_width && y <= terminal_height)
+    if (x >= 0 && y >= 0 && x <= terminal_width && y <= terminal_height)
     {
         goto_xy(x, y);
         set_color(color);
@@ -85,48 +87,137 @@ static void draw_pixel(int x, int y, int color, int weight)
     }
 }
 
-static void draw_circle(int x, int y, int radius, int color, int weight)
+static void draw_circle(int x, int y, int radius_x, int radius_y, int color, int weight)
 {
     // Yep, this wastes incredible amounts of cpu-time for calculating
     // the same pixels over and over again. But it's less code than Bresenham's,
     // so it's kept :o)
     for (float angle = 0; angle < 2 * pi; angle += 0.05f)
     {
-        float x2 = roundf(cos(angle) * radius) + x;
-        float y2 = roundf(sin(angle) * radius) + y;
+        float x2 = roundf(cos(angle) * radius_x) + x;
+        float y2 = roundf(sin(angle) * radius_y) + y;
         draw_pixel(x2, y2, color, weight);
     }
 }
 
-static void draw_smooth_circle(int x, int y, int radius, int color)
+static void draw_smooth_circle(int x, int y, int radius_x, int radius_y, int color)
 {
     for (int i = -2; i <= 2; i++)
     {
-        draw_circle(x, y, radius + i, color, abs(i));
+        draw_circle(x, y, radius_x + i, radius_y + i, color, abs(i));
     }
 }
 
-static void update_graphics(unsigned int position)
+static void draw_rectangle(int x, int y, int width, int height, int color)
+{
+    for (int x2 = 0; x2 < width; x2++)
+    {
+        for (int y2 = 0; y2 < height; y2++)
+        {
+            draw_pixel(x + x2, y + y2, color, 2);
+        }
+    }
+}
+
+static bool intro_scene(unsigned int position)
+{
+    static const char text1[] = "Lynx presents:";
+    static const char text2[] = "O T H E R";
+
+    if (position > 8)
+    {
+        goto_xy(terminal_width / 2 - sizeof(text1) / 2, terminal_height / 2 - 1);
+        puts(text1);
+    }
+
+    if (position > 16)
+    {
+        goto_xy(terminal_width / 2 - sizeof(text2) / 2, terminal_height / 2 + 1);
+        puts(text2);
+    }
+
+    return position < 32;
+}
+
+static bool chessboard_scene(unsigned int position)
+{
+    static const int width = 8;
+    static const int height = 4;
+
+    int x = position % (terminal_width / width) * width;
+    int y = position % (terminal_height / height + 1) * height;
+    int color = (position >> 2 | position) % 8;
+
+    draw_rectangle(x, y, width, height, color);
+
+    return position < 128;
+}
+
+static bool circle_scene(unsigned int position)
 {
     for (int i = 0; i < 3; i++)
     {
-        int radius = (position >> i | position) % 20;
-        int x = (((position / (radius + 1)) >> i) | i) % terminal_width;
-        int y = (((position / (radius + 1)) >> i) | i) % terminal_height;
-        int color = (position + i) / 12 % 7 + 1;
+        int radius_x = (position >> i | position) % 20;
+        int radius_y = radius_x * 0.75f;
+        int x = (((position / (radius_x + 1)) >> i) | i) % terminal_width;
+        int y = (((position / (radius_y + 1)) >> i) | i) % terminal_height;
+        int color = (position + i) / 12 % 8;
 
-        draw_smooth_circle(x, y, radius, color);
+        draw_smooth_circle(x, y, radius_x, radius_y, color);
     }
+
+    return position < 256;
+}
+
+static bool smilie_scene(unsigned int position)
+{
+    if (position == 256)
+    {
+        int eye_width = terminal_height / 3;
+        int eye_height = position != 256;
+        int eye_offset_x = terminal_width / 3.5f;
+        int eye_offset_y = terminal_height / 4;
+
+        draw_smooth_circle(eye_offset_x, eye_offset_y, eye_width, eye_height, 5);
+        draw_smooth_circle(terminal_width - eye_offset_x, eye_offset_y, eye_width, eye_height, 5);
+    }
+
+    int mouth_width = terminal_height / 5 * ((position - 256) / 2);
+    int mouth_height = position - 256;
+    int mouth_offset_x = terminal_width / 2;
+    int mouth_offset_y = terminal_height * 0.65f;
+
+    draw_smooth_circle(mouth_offset_x, mouth_offset_y, mouth_width + 2, mouth_height + 2, 5);
+    draw_smooth_circle(mouth_offset_x, mouth_offset_y, mouth_width, mouth_height, 0);
+
+    return true;
 }
 
 int main(int argc, char** argv)
 {
-    clear_terminal();
+    typedef bool (*scene_fn)(unsigned int);
+    static const scene_fn scenes[] = {
+            &intro_scene,
+            &chessboard_scene,
+            &circle_scene,
+            &smilie_scene,
+            NULL
+    };
+    int current_scene = 0;
+
+    init_terminal();
     snd_pcm_t* alsa_handle = init_alsa();
 
-    for (unsigned int position = 0; position < 1024; position++)
+    unsigned int position = 0;
+    while (scenes[current_scene])
     {
-        update_graphics(position);
         update_sound(alsa_handle, position);
+
+        if (!scenes[current_scene](position))
+        {
+            current_scene++;
+        }
+
+        position++;
     }
 }
