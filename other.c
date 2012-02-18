@@ -56,18 +56,6 @@ static void fill_sound_buffer(unsigned short position, char* buffer, size_t size
     }
 }
 
-static void update_sound(snd_pcm_t* handle, unsigned short position)
-{
-    char buffer[8172]; // this arrays size controls the frame-rate
-
-    fill_sound_buffer(position, buffer, sizeof(buffer));
-
-    // This call implicitly handles the timing. Since it doesn't return until
-    // all data is written or an error occurs and the time it takes for the buffer
-    // to get empty is fixed, it guarantees that we also have a fixed frame-rate
-    snd_pcm_writei(handle, buffer, sizeof(buffer));
-}
-
 static void init_terminal()
 {
     // initially, I disabled buffering of stdout, but this created a lot of code.
@@ -132,19 +120,18 @@ static void draw_rectangle(int x, int y, int width, int height, int color)
 // the compiler refuses to inline these, even when using the force_inline attribute.
 // Since they're only used once, I implemented them as macros to avoid the calling
 // overhead
-#define draw_chessboard(_position) \
+#define update_sound(_handle, _position) \
     do { \
-        static const int width = 8; \
-        static const int height = 4; \
+        char buffer[8172]; /* this arrays size controls the frame-rate */ \
+        fill_sound_buffer(_position, buffer, sizeof(buffer)); \
         \
-        int x = _position % (terminal_width / width) * width; \
-        int y = _position % (terminal_height / height + 1) * height; \
-        int color = (_position >> 2 | _position) % 8; \
-        \
-        draw_rectangle(x, y, width, height, color); \
+        /* This call implicitly handles the timing. Since it doesn't return until
+           all data is written or an error occurs and the time it takes for the buffer
+           to get empty is fixed, it guarantees that we also have a fixed frame-rate */ \
+           snd_pcm_writei(_handle, buffer, sizeof(buffer)); \
     } while (false)
 
-#define draw_circles(_position) \
+#define update_graphics(_position) \
     do { \
         for (int i = 0; i < 3; i++) \
         { \
@@ -167,14 +154,7 @@ void _start()
     for (unsigned short position = 0; position < 512; position++)
     {
         update_sound(alsa_handle, position);
-        if ((position / 128) % 2 == 0)
-        {
-            draw_chessboard(position);
-        }
-        else
-        {
-            draw_circles(position);
-        }
+        update_graphics(position);
     }
 
     exit(0);
