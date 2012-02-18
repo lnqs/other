@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -Os -std=c99 -fomit-frame-pointer
 CPPFLAGS =
-LDFLAGS =
+LDFLAGS = -dynamic-linker /lib/ld-linux.so.2
 LIBS = -lasound
 
 SOURCES = $(wildcard *.c)
@@ -11,7 +11,7 @@ EXECUTABLE = other
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS)
 
 %.o: %.c %.d
 	$(CC) -c $(CFLAGS) $< -o $@

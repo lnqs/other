@@ -145,7 +145,7 @@ static void draw_circles(unsigned int position)
     }
 }
 
-int main(int argc, char** argv)
+void _start()
 {
     init_terminal();
     snd_pcm_t* alsa_handle = init_alsa();
@@ -162,4 +162,6 @@ int main(int argc, char** argv)
             draw_circles(position);
         }
     }
+
+    exit(0);
 }
