@@ -11,17 +11,26 @@ static const int terminal_height = 25;
 
 snd_pcm_t* init_alsa()
 {
+    // Goodbye, portability.
+    // The following buffer is used for almost everything in this function so
+    // save a few bytes of code. The main problem with this is
+    // that it has to be at least as big as snd_pcm_hw_params_t which is 604 on
+    // my system and which i believe to be implementation defined.
+    // Just using a sizeof() isn't possible, too. The declaration of the struct
+    // is somewhere hidden in the implementation.
+    // I feel dirty now. I'll go take a shower. Crying. :o(
+    char buffer[604] = { 0, };
+
     // We really should add error-handling to the following calls,
     // but this would be a lot of additional code :/
     snd_pcm_t* handle;
     snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
-    snd_pcm_hw_params_t* params;
-    snd_pcm_hw_params_alloca(&params);
+    snd_pcm_hw_params_t* params = (snd_pcm_hw_params_t*)buffer;
     snd_pcm_hw_params_any(handle, params);
-    unsigned int rate = 44100;
-    snd_pcm_hw_params_set_rate_near(handle, params, &rate, NULL);
-    snd_pcm_uframes_t size = 32688;
-    snd_pcm_hw_params_set_buffer_size_max(handle, params, &size);
+    *(unsigned int*)buffer = 44100;
+    snd_pcm_hw_params_set_rate_near(handle, params, (unsigned int*)buffer, NULL);
+    *(snd_pcm_uframes_t*)buffer = 32688;
+    snd_pcm_hw_params_set_buffer_size_max(handle, params, (snd_pcm_uframes_t*)buffer);
     snd_pcm_hw_params(handle, params);
 
     // It may look strange that we fill alsa's internal buffer with zeros, but
@@ -30,7 +39,6 @@ snd_pcm_t* init_alsa()
     // initially. Otherwise, it would return too fast and the first frames would
     // be way shorter. This is ugly, yeah, but I don't see an approach that wouldn't
     // require lots of additional code.
-    char buffer[512] = { 0, };
     snd_pcm_nonblock(handle, 1);
     while(snd_pcm_writei(handle, buffer, sizeof(buffer)) == sizeof(buffer));
     snd_pcm_nonblock(handle, 0);
