@@ -1,5 +1,6 @@
 CC = gcc
 LD = ld
+STRIP = sstrip
 CFLAGS = -Wall -Os -std=c99 -fomit-frame-pointer
 CPPFLAGS =
 LDFLAGS = -dynamic-linker /lib/ld-linux.so.2
@@ -13,6 +14,7 @@ all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJECTS) $(LIBS)
+	$(STRIP) $@
 
 %.o: %.c %.d
 	$(CC) -c $(CFLAGS) $< -o $@
