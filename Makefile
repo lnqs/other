@@ -1,7 +1,7 @@
 CC = gcc
 LD = ld
 STRIP = sstrip
-CFLAGS = -Wall -Os -std=c99 -fomit-frame-pointer
+CFLAGS = -Wall -Os -std=c99 -fomit-frame-pointer -Wno-strict-aliasing
 CPPFLAGS =
 LDFLAGS = -dynamic-linker /lib/ld-linux.so.2
 LIBS = -lc -lm -lasound
