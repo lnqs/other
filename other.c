@@ -127,31 +127,34 @@ static void draw_rectangle(int x, int y, int width, int height, int color)
     }
 }
 
-static void draw_chessboard(unsigned int position)
-{
-    static const int width = 8;
-    static const int height = 4;
+// the compiler refuses to inline these, even when using the force_inline attribute.
+// Since they're only used once, I implemented them as macros to avoid the calling
+// overhead
+#define draw_chessboard(_position) \
+    do { \
+        static const int width = 8; \
+        static const int height = 4; \
+        \
+        int x = _position % (terminal_width / width) * width; \
+        int y = _position % (terminal_height / height + 1) * height; \
+        int color = (_position >> 2 | _position) % 8; \
+        \
+        draw_rectangle(x, y, width, height, color); \
+    } while (false)
 
-    int x = position % (terminal_width / width) * width;
-    int y = position % (terminal_height / height + 1) * height;
-    int color = (position >> 2 | position) % 8;
-
-    draw_rectangle(x, y, width, height, color);
-}
-
-static void draw_circles(unsigned int position)
-{
-    for (int i = 0; i < 3; i++)
-    {
-        int radius_x = (position >> i | position) % 20;
-        int radius_y = radius_x * 0.75f;
-        int x = (((position / (radius_x + 1)) >> i) | i) % terminal_width;
-        int y = (((position / (radius_y + 1)) >> i) | i) % terminal_height;
-        int color = (position + i) / 12 % 8;
-
-        draw_smooth_circle(x, y, radius_x, radius_y, color);
-    }
-}
+#define draw_circles(_position) \
+    do { \
+        for (int i = 0; i < 3; i++) \
+        { \
+            int radius_x = (_position >> i | _position) % 20; \
+            int radius_y = radius_x * 0.75f; \
+            int x = (((_position / (radius_x + 1)) >> i) | i) % terminal_width; \
+            int y = (((_position / (radius_y + 1)) >> i) | i) % terminal_height; \
+            int color = (_position + i) / 12 % 8; \
+            \
+            draw_smooth_circle(x, y, radius_x, radius_y, color); \
+        } \
+    } while (false)
 
 // Who needs main()? :o)
 void _start()
