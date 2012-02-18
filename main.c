@@ -5,9 +5,9 @@
 #include <alloca.h>
 #include <limits.h>
 
-const float pi = 3.14159265358979323846f;
-const int terminal_width = 80;
-const int terminal_height = 25;
+static const float pi = 3.14159265358979323846f;
+static const int terminal_width = 80;
+static const int terminal_height = 25;
 
 snd_pcm_t* init_alsa()
 {
@@ -119,29 +119,7 @@ static void draw_rectangle(int x, int y, int width, int height, int color)
     }
 }
 
-// TODO: cleanup/refactor
-static bool intro_scene(unsigned int position)
-{
-    static const char text1[] = "Lynx presents:";
-    static const char text2[] = "O T H E R";
-
-    if (position > 8)
-    {
-        goto_xy(terminal_width / 2 - sizeof(text1) / 2, terminal_height / 2 - 1);
-        puts(text1);
-    }
-
-    if (position > 16)
-    {
-        goto_xy(terminal_width / 2 - sizeof(text2) / 2, terminal_height / 2 + 1);
-        puts(text2);
-    }
-
-    return position < 32;
-}
-
-// TODO: cleanup/refactor
-static bool chessboard_scene(unsigned int position)
+static void draw_chessboard(unsigned int position)
 {
     static const int width = 8;
     static const int height = 4;
@@ -151,12 +129,9 @@ static bool chessboard_scene(unsigned int position)
     int color = (position >> 2 | position) % 8;
 
     draw_rectangle(x, y, width, height, color);
-
-    return position < 128;
 }
 
-// TODO: cleanup/refactor
-static bool circle_scene(unsigned int position)
+static void draw_circles(unsigned int position)
 {
     for (int i = 0; i < 3; i++)
     {
@@ -168,62 +143,23 @@ static bool circle_scene(unsigned int position)
 
         draw_smooth_circle(x, y, radius_x, radius_y, color);
     }
-
-    return position < 256;
 }
 
-// TODO: cleanup/refactor
-static bool smilie_scene(unsigned int position)
-{
-    if (position == 256)
-    {
-        int eye_width = terminal_height / 3;
-        int eye_height = position != 256;
-        int eye_offset_x = terminal_width / 3.5f;
-        int eye_offset_y = terminal_height / 4;
-
-        draw_smooth_circle(eye_offset_x, eye_offset_y, eye_width, eye_height, 5);
-        draw_smooth_circle(terminal_width - eye_offset_x, eye_offset_y, eye_width, eye_height, 5);
-    }
-
-    int mouth_width = terminal_height / 5 * ((position - 256) / 2);
-    int mouth_height = position - 256;
-    int mouth_offset_x = terminal_width / 2;
-    int mouth_offset_y = terminal_height * 0.65f;
-
-    draw_smooth_circle(mouth_offset_x, mouth_offset_y, mouth_width + 2, mouth_height + 2, 5);
-    draw_smooth_circle(mouth_offset_x, mouth_offset_y, mouth_width, mouth_height, 0);
-
-    return true;
-}
-
-// TODO: cleanup/refactor
 int main(int argc, char** argv)
 {
-    typedef bool (*scene_fn)(unsigned int);
-    static const scene_fn scenes[] = {
-            &intro_scene,
-            &chessboard_scene,
-            &circle_scene,
-            &smilie_scene,
-            NULL
-    };
-    int current_scene = 0;
-
     init_terminal();
     snd_pcm_t* alsa_handle = init_alsa();
 
-    unsigned int position = 0;
-    while (scenes[current_scene])
+    for (int position = 0; position < 512; position++)
     {
         update_sound(alsa_handle, position);
-
-        if (!scenes[current_scene](position))
+        if ((position / 128) % 2 == 0)
         {
-            current_scene++;
+            draw_chessboard(position);
         }
-
-        position++;
+        else
+        {
+            draw_circles(position);
+        }
     }
 }
-
