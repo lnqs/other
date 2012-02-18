@@ -106,17 +106,6 @@ static void draw_smooth_circle(int x, int y, int radius_x, int radius_y, int col
     }
 }
 
-static void draw_rectangle(int x, int y, int width, int height, int color)
-{
-    for (int x2 = 0; x2 < width; x2++)
-    {
-        for (int y2 = 0; y2 < height; y2++)
-        {
-            draw_pixel(x + x2, y + y2, color, 2);
-        }
-    }
-}
-
 // the compiler refuses to inline these, even when using the force_inline attribute.
 // Since they're only used once, I implemented them as macros to avoid the calling
 // overhead
