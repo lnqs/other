@@ -69,19 +69,20 @@ static void update_sound(snd_pcm_t* handle, unsigned short position)
 
 static void init_terminal()
 {
-    setvbuf(stdout, NULL, _IONBF, 0);
-    printf("\033[1J");
+    // initially, I disabled buffering of stdout, but this created a lot of code.
+    // Therefore, printing to the per-default non-buffered stderr should be fine, too
+    fprintf(stderr, "\033[1J");
 }
 
 static void goto_xy(int x, int y)
 {
     // terminal-coordinates start from (1, 1), what sucks.
-    printf("\033[%i;%iH", y + 1, x + 1);
+    fprintf(stderr, "\033[%i;%iH", y + 1, x + 1);
 }
 
 static void set_color(int color)
 {
-    printf("\033[%im", 30 + color);
+    fprintf(stderr, "\033[%im", 30 + color);
 }
 
 static void draw_pixel(int x, int y, int color, int weight)
@@ -90,8 +91,8 @@ static void draw_pixel(int x, int y, int color, int weight)
     {
         goto_xy(x, y);
         set_color(color);
-        printf("\xe2\x96%c", 0x91 + weight); // becomes one of ░, ▒ or ▓
-                                             // for weight of 0, 1 or 2
+        fprintf(stderr, "\xe2\x96%c", 0x91 + weight); // becomes one of ░, ▒ or ▓
+                                                      // for weight of 0, 1 or 2
     }
 }
 
