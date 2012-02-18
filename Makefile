@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Os -std=c99 -ggdb
+CFLAGS = -Wall -Os -std=c99 -fomit-frame-pointer
 CPPFLAGS =
 LDFLAGS =
 LIBS = -lasound

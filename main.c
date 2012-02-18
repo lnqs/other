@@ -82,7 +82,7 @@ static void draw_pixel(int x, int y, int color, int weight)
     {
         goto_xy(x, y);
         set_color(color);
-        printf("\xe2\x96%c", 0x91 + weight); // gets one of ░, ▒ or ▓
+        printf("\xe2\x96%c", 0x91 + weight); // becomes one of ░, ▒ or ▓
                                              // for weight of 0, 1 or 2
     }
 }
@@ -119,6 +119,7 @@ static void draw_rectangle(int x, int y, int width, int height, int color)
     }
 }
 
+// TODO: cleanup/refactor
 static bool intro_scene(unsigned int position)
 {
     static const char text1[] = "Lynx presents:";
@@ -139,6 +140,7 @@ static bool intro_scene(unsigned int position)
     return position < 32;
 }
 
+// TODO: cleanup/refactor
 static bool chessboard_scene(unsigned int position)
 {
     static const int width = 8;
@@ -153,6 +155,7 @@ static bool chessboard_scene(unsigned int position)
     return position < 128;
 }
 
+// TODO: cleanup/refactor
 static bool circle_scene(unsigned int position)
 {
     for (int i = 0; i < 3; i++)
@@ -169,6 +172,7 @@ static bool circle_scene(unsigned int position)
     return position < 256;
 }
 
+// TODO: cleanup/refactor
 static bool smilie_scene(unsigned int position)
 {
     if (position == 256)
@@ -193,6 +197,7 @@ static bool smilie_scene(unsigned int position)
     return true;
 }
 
+// TODO: cleanup/refactor
 int main(int argc, char** argv)
 {
     typedef bool (*scene_fn)(unsigned int);
@@ -221,3 +226,4 @@ int main(int argc, char** argv)
         position++;
     }
 }
+
