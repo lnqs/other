@@ -1,5 +1,6 @@
 *.d
 *.o
 other
+other.bin
 .project
 .cproject
