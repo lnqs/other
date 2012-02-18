@@ -46,7 +46,7 @@ snd_pcm_t* init_alsa()
     return handle;
 }
 
-static void fill_sound_buffer(unsigned int position, char* buffer, size_t size)
+static void fill_sound_buffer(unsigned short position, char* buffer, size_t size)
 {
     for (size_t i = 0; i < size; i++)
     {
@@ -55,7 +55,7 @@ static void fill_sound_buffer(unsigned int position, char* buffer, size_t size)
     }
 }
 
-static void update_sound(snd_pcm_t* handle, unsigned int position)
+static void update_sound(snd_pcm_t* handle, unsigned short position)
 {
     char buffer[8172]; // this arrays size controls the frame-rate
 
@@ -162,7 +162,7 @@ void _start()
     init_terminal();
     snd_pcm_t* alsa_handle = init_alsa();
 
-    for (int position = 0; position < 512; position++)
+    for (unsigned short position = 0; position < 512; position++)
     {
         update_sound(alsa_handle, position);
         if ((position / 128) % 2 == 0)
