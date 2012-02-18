@@ -50,7 +50,7 @@ static void fill_sound_buffer(unsigned short position, char* buffer, size_t size
 {
     for (size_t i = 0; i < size; i++)
     {
-        unsigned int t = position * size + i;
+        size_t t = position * size + i;
         buffer[i] = sinf(2.0f * pi * 1.0f / (46 * (t & (t >> 12))) * t) * CHAR_MAX;
     }
 }
