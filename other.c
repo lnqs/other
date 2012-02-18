@@ -5,6 +5,8 @@
 #include <alloca.h>
 #include <limits.h>
 
+#define print(...) fprintf(stderr, __VA_ARGS__)
+
 static const float pi = 3.14159265358979323846f;
 static const int terminal_width = 80;
 static const int terminal_height = 25;
@@ -70,18 +72,18 @@ static void init_terminal()
 {
     // initially, I disabled buffering of stdout, but this created a lot of code.
     // Therefore, printing to the per-default non-buffered stderr should be fine, too
-    fprintf(stderr, "\033[1J");
+    print("\033[1J");
 }
 
 static void goto_xy(int x, int y)
 {
     // terminal-coordinates start from (1, 1), what sucks.
-    fprintf(stderr, "\033[%i;%iH", y + 1, x + 1);
+    print("\033[%i;%iH", y + 1, x + 1);
 }
 
 static void set_color(int color)
 {
-    fprintf(stderr, "\033[%im", 30 + color);
+    print("\033[%im", 30 + color);
 }
 
 static void draw_pixel(int x, int y, int color, int weight)
@@ -90,7 +92,7 @@ static void draw_pixel(int x, int y, int color, int weight)
     {
         goto_xy(x, y);
         set_color(color);
-        fprintf(stderr, "\xe2\x96%c", 0x91 + weight); // becomes one of ░, ▒ or ▓
+        print("\xe2\x96%c", 0x91 + weight); // becomes one of ░, ▒ or ▓
                                                       // for weight of 0, 1 or 2
     }
 }
