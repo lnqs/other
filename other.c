@@ -24,7 +24,7 @@ snd_pcm_t* init_alsa()
     // We really should add error-handling to the following calls,
     // but this would be a lot of additional code :/
     snd_pcm_t* handle;
-    snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
+    snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, SND_PCM_NONBLOCK);
     snd_pcm_hw_params_t* params = (snd_pcm_hw_params_t*)buffer;
     snd_pcm_hw_params_any(handle, params);
     *(unsigned int*)buffer = 44100;
@@ -39,7 +39,6 @@ snd_pcm_t* init_alsa()
     // initially. Otherwise, it would return too fast and the first frames would
     // be way shorter. This is ugly, yeah, but I don't see an approach that wouldn't
     // require lots of additional code.
-    snd_pcm_nonblock(handle, 1);
     while(snd_pcm_writei(handle, buffer, sizeof(buffer)) == sizeof(buffer));
     snd_pcm_nonblock(handle, 0);
 
