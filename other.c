@@ -145,6 +145,7 @@ static void draw_circles(unsigned int position)
     }
 }
 
+// Who needs main()? :o)
 void _start()
 {
     init_terminal();

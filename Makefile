@@ -1,8 +1,9 @@
 CC = gcc
+LD = ld
 CFLAGS = -Wall -Os -std=c99 -fomit-frame-pointer
 CPPFLAGS =
 LDFLAGS = -dynamic-linker /lib/ld-linux.so.2
-LIBS = -lasound
+LIBS = -lc -lm -lasound
 
 SOURCES = $(wildcard *.c)
 OBJECTS = $(SOURCES:.c=.o)
