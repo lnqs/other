@@ -81,7 +81,7 @@ static void draw_pixel(int x, int y, int color, int weight)
         goto_xy(x, y);
         set_color(color);
         print("\xe2\x96%c", 0x91 + weight); // becomes one of ░, ▒ or ▓
-                                                      // for weight of 0, 1 or 2
+                                            // for weight of 0, 1 or 2
     }
 }
 
@@ -125,9 +125,9 @@ static void draw_smooth_circle(int x, int y, int radius_x, int radius_y, int col
         for (int i = 0; i < 3; i++) \
         { \
             int radius_x = (_position >> i | _position) % 20; \
-            int radius_y = radius_x * 0.75f; \
-            int x = (((_position / (radius_x + 1)) >> i) | i) % terminal_width; \
-            int y = (((_position / (radius_y + 1)) >> i) | i) % terminal_height; \
+            int radius_y = radius_x - radius_x / 2; \
+            int x = ((_position / (radius_x + 1)) * i) % terminal_width; \
+            int y = ((_position / (radius_y + 1)) * i) % terminal_height; \
             int color = (_position + i) / 12 % 8; \
             \
             draw_smooth_circle(x, y, radius_x, radius_y, color); \
@@ -140,11 +140,11 @@ void _start()
     init_terminal();
     snd_pcm_t* alsa_handle = init_alsa();
 
-    for (unsigned short position = 0; position < 512; position++)
+    for (unsigned short position = 0; true; position++)
     {
         update_sound(alsa_handle, position);
         update_graphics(position);
     }
 
-    exit(0);
+    // since we're looping endless, no need to call exit()
 }
