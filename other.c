@@ -21,7 +21,7 @@ snd_pcm_t* init_alsa()
     // Just using a sizeof() isn't possible, too. The declaration of the struct
     // is somewhere hidden in the implementation.
     // I feel dirty now. I'll go take a shower. Crying. :o(
-    char buffer[604] = { 0, };
+    unsigned char buffer[604] = { 0, };
 
     // We really should add error-handling to the following calls,
     // but this would be a lot of additional code :/
@@ -47,12 +47,12 @@ snd_pcm_t* init_alsa()
     return handle;
 }
 
-static void fill_sound_buffer(unsigned short position, char* buffer, size_t size)
+static void fill_sound_buffer(unsigned short position, unsigned char* buffer, size_t size)
 {
     for (size_t i = 0; i < size; i++)
     {
         size_t t = position * size + i;
-        buffer[i] = sinf(2.0f * pi * 1.0f / (46 * (t & (t >> 12))) * t) * CHAR_MAX;
+        buffer[i] = sinf(2.0f * pi * 1.0f / (46 * (t & (t >> 12))) * t) * UCHAR_MAX;
     }
 }
 
@@ -111,7 +111,7 @@ static void draw_smooth_circle(int x, int y, int radius_x, int radius_y, int col
 // overhead
 #define update_sound(_handle, _position) \
     do { \
-        char buffer[8172]; /* this arrays size controls the frame-rate */ \
+        unsigned char buffer[8172]; /* this arrays size controls the frame-rate */ \
         fill_sound_buffer(_position, buffer, sizeof(buffer)); \
         \
         /* This call implicitly handles the timing. Since it doesn't return until
