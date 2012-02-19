@@ -102,7 +102,7 @@ static void draw_smooth_circle(int x, int y, int radius_x, int radius_y, int col
 {
     for (int i = -2; i <= 2; i++)
     {
-        draw_circle(x, y, radius_x + i, radius_y + i, color, abs(i));
+        draw_circle(x, y, radius_x + i, radius_y + i, color, 2 - abs(i));
     }
 }
 
